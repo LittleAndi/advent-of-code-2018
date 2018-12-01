@@ -10,7 +10,6 @@ namespace day01
         static void Main(string[] args)
         {
             List<int> numbers = new List<int>();
-            HashSet<int> frequencies = new HashSet<int>();
             using (TextReader tr = new StreamReader("input.txt"))
             {
                 string s = "";
@@ -21,21 +20,22 @@ namespace day01
             }
 
             int total = 0;
-            bool lookForRepeatedFrequency = true;
-            int loops = 0;
-            while (lookForRepeatedFrequency)
+            int currentLoop = 0;
+            HashSet<int> frequencies = new HashSet<int>();
+            frequencies.Add(0); // Add zero as the first occuring frequency
+            while (true)
             {
-                loops++;
+                currentLoop++;
                 foreach (var i in numbers)
                 {
                     total += i;
                     if (!frequencies.Add(total))
                     {
-                        System.Console.WriteLine($"First repeated frequency is {total} in {loops} loops");
+                        System.Console.WriteLine($"First repeated frequency is {total} in loop {currentLoop}");
                         return;
                     }
                 }
-                System.Console.WriteLine($"Loop {loops} => {total}");
+                System.Console.WriteLine($"Loop {currentLoop} => {total}");
             }
         }
     }
