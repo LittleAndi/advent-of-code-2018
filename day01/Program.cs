@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
@@ -8,17 +9,34 @@ namespace day01
     {
         static void Main(string[] args)
         {
-            int total = 0;
+            List<int> numbers = new List<int>();
+            HashSet<int> frequencies = new HashSet<int>();
             using (TextReader tr = new StreamReader("input.txt"))
             {
                 string s = "";
                 while ((s = tr.ReadLine()) != null)
                 {
-                    var i = int.Parse(s, CultureInfo.InvariantCulture);
-                    total += i;
+                    numbers.Add(int.Parse(s, CultureInfo.InvariantCulture));
                 }
             }
-            System.Console.WriteLine(total);
+
+            int total = 0;
+            bool lookForRepeatedFrequency = true;
+            int loops = 0;
+            while (lookForRepeatedFrequency)
+            {
+                loops++;
+                foreach (var i in numbers)
+                {
+                    total += i;
+                    if (!frequencies.Add(total))
+                    {
+                        System.Console.WriteLine($"First repeated frequency is {total} in {loops} loops");
+                        return;
+                    }
+                }
+                System.Console.WriteLine($"Loop {loops} => {total}");
+            }
         }
     }
 }
