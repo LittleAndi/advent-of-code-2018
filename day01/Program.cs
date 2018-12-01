@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.IO;
 
 namespace day01
 {
@@ -6,7 +8,17 @@ namespace day01
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            int total = 0;
+            using (TextReader tr = new StreamReader("input.txt"))
+            {
+                string s = "";
+                while ((s = tr.ReadLine()) != null)
+                {
+                    var i = int.Parse(s, CultureInfo.InvariantCulture);
+                    total += i;
+                }
+            }
+            System.Console.WriteLine(total);
         }
     }
 }
