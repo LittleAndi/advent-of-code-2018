@@ -1,7 +1,7 @@
 pull_request_rules:
   - name: automatic merge when CI passes
     condition:
-      - status-success=continous-integration/azurepipelines/pr
+      - status-success=continous-integration/travis-ci/pr
       - base=master
     actions:
       merge:
