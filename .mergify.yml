@@ -1,6 +1,6 @@
 pull_request_rules:
   - name: automatic merge when CI passes
-    condition:
+    conditions:
       - base=master
     actions:
       merge:
