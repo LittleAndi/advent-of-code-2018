@@ -46,6 +46,18 @@ namespace day02
             }
         }
 
+        public bool HasExactlyOneDifferingCharacter(string input)
+        {
+            if (ID.Length != input.Length) return false;
+            var idChars = ID.ToCharArray();
+            int differingLetters = 0;
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] != idChars[i]) differingLetters++;
+            }
+            return differingLetters == 1;
+        }
+
         private bool HasOccurrenceOfN(string input, int matchingRepeats)
         {
             foreach (char ch in input)
