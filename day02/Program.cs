@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace day02
 {
@@ -18,7 +19,7 @@ namespace day02
         {
             get
             {
-                return false;
+                return HasOccurrenceOfN(ID, 2);
             }
         }
 
@@ -26,9 +27,18 @@ namespace day02
         {
             get
             {
-                return false;
+                return HasOccurrenceOfN(ID, 3);
             }
         }
 
+        private bool HasOccurrenceOfN(string input, int matchingRepeats)
+        {
+            foreach (char ch in input)
+            {
+                var occurrence = input.Count(c => c.Equals(ch));
+                if (occurrence == matchingRepeats) return true;
+            }
+            return false;
+        }
     }
 }
