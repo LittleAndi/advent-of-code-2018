@@ -59,14 +59,14 @@ namespace day02tests
         public void HasNotExactlyOneDifferingCharacter()
         {
             var box = new Box { ID = "abcde" };
-            Assert.False(box.HasExactlyOneDifferingCharacter("axcye"));
+            Assert.Equal(' ', box.HasExactlyOneDifferingCharacter("axcye"));
         }
 
         [Fact]
         public void HasExactlyOneDifferingCharacter()
         {
             var box = new Box { ID = "fghij" };
-            Assert.True(box.HasExactlyOneDifferingCharacter("fguij"));
+            Assert.Equal('h', box.HasExactlyOneDifferingCharacter("fguij"));
         }
 
     }

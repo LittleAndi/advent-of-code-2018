@@ -22,7 +22,7 @@ namespace day02
             var twos = boxes.Count(box => box.HasExactlyTwoOfAnyLetter);
             var threes = boxes.Count(box => box.HasExactlyThreeOfAnyLetter);
 
-            System.Console.WriteLine(twos * threes);
+            System.Console.WriteLine($"Part 1: {twos * threes}");
         }
     }
 
@@ -46,16 +46,17 @@ namespace day02
             }
         }
 
-        public bool HasExactlyOneDifferingCharacter(string input)
+        public char HasExactlyOneDifferingCharacter(string input)
         {
-            if (ID.Length != input.Length) return false;
+            if (ID.Length != input.Length) return ' ';
             var idChars = ID.ToCharArray();
             int differingLetters = 0;
+            char lastDifferingLetter = ' ';
             for (int i = 0; i < input.Length; i++)
             {
-                if (input[i] != idChars[i]) differingLetters++;
+                if (input[i] != idChars[i]) { differingLetters++; lastDifferingLetter = idChars[i]; }
             }
-            return differingLetters == 1;
+            return differingLetters == 1 ? lastDifferingLetter : ' ';
         }
 
         private bool HasOccurrenceOfN(string input, int matchingRepeats)
