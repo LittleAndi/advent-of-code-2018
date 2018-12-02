@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace day02
@@ -7,7 +9,20 @@ namespace day02
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World again!");
+            List<Box> boxes = new List<Box>();
+            using (TextReader tr = new StreamReader("input.txt"))
+            {
+                string s = "";
+                while ((s = tr.ReadLine()) != null)
+                {
+                    boxes.Add(new Box { ID = s });
+                }
+            }
+
+            var twos = boxes.Count(box => box.HasExactlyTwoOfAnyLetter);
+            var threes = boxes.Count(box => box.HasExactlyThreeOfAnyLetter);
+
+            System.Console.WriteLine(twos * threes);
         }
     }
 
