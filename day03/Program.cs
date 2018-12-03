@@ -41,7 +41,7 @@ namespace day03
                 {
                     var overlap = lines[i].Overlap(lines[j]);
                     if (overlap) {
-                        System.Console.WriteLine($"{i},{j} - {lines[i].ID} overlapping {lines[j].ID}");
+                        //System.Console.WriteLine($"{i},{j} - {lines[i].ID} overlapping {lines[j].ID}");
                         overlapping++;
                     }
                 }
@@ -101,9 +101,9 @@ namespace day03
             // x1 <= y2 && y1 <= x2
             var objA = this;
             var objB = input;
-            if (objA.X < objB.X + objB.W && objB.X < objA.X + objA.W)
+            if (objA.X <= objB.X + objB.W - 1 && objB.X <= objA.X + objA.W - 1)
             {
-                if (objA.Y < objB.Y + objB.H && objB.Y < objA.Y + objA.H)
+                if (objA.Y < objB.Y + objB.H - 1 && objB.Y < objA.Y + objA.H - 1)
                 {
                     return true;
                 }
