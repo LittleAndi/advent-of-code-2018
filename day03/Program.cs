@@ -9,46 +9,47 @@ namespace day03
     {
         static void Main(string[] args)
         {
-            var lines = File.ReadAllLines("input.txt")
+            var fabrics = File.ReadAllLines("input.txt")
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .Select(l => new Fabric { Line = l })
                 .ToArray();
 
-            System.Console.WriteLine(lines.Max(l => l.ID));
-            System.Console.WriteLine(lines.Max(l => l.X));
-            System.Console.WriteLine(lines.Max(l => l.Y));
-            System.Console.WriteLine(lines.Max(l => l.W));
-            System.Console.WriteLine(lines.Max(l => l.H));
+            System.Console.WriteLine(fabrics.Max(l => l.ID));
+            System.Console.WriteLine(fabrics.Max(l => l.X));
+            System.Console.WriteLine(fabrics.Max(l => l.Y));
+            System.Console.WriteLine(fabrics.Max(l => l.W));
+            System.Console.WriteLine(fabrics.Max(l => l.H));
 
-            //int[,,] area = new int[1050, 1050, 1];
+            Dictionary<int, int> overlappingFabrics = new Dictionary<int, int>();
 
-            var testlines = new List<Fabric>();
-            testlines.Add(new Fabric{ Line = "#1 @ 1,3: 4x4" });
-            testlines.Add(new Fabric{ Line = "#2 @ 3,1: 4x4" });
-            testlines.Add(new Fabric{ Line = "#3 @ 5,5: 2x2" });
-            testlines.Add(new Fabric{ Line = "#806 @ 728,868: 16x18"});
-            testlines.Add(new Fabric{ Line = "#811 @ 731,816: 12x17"});
+            int overlapping = 0;
+            Dictionary<Coordinate, int> totalOverlappingCoordinates = new Dictionary<Coordinate, int>();
 
-            System.Console.WriteLine(testlines[0].Overlap(testlines[1]));
-            System.Console.WriteLine(testlines[0].Overlap(testlines[2]));
-            System.Console.WriteLine(testlines[1].Overlap(testlines[2]));
-            System.Console.WriteLine(testlines[3].Overlap(testlines[4]));
-
-            int overlapping = 0;            
-            for (int i = 0; i < 1335; i++)
+            for (int i = 0; i < fabrics.Length; i++)
             {
-                for (int j = i+1; j < 1335; j++)
+                for (int j = i+1; j < fabrics.Length; j++)
                 {
-                    var overlap = lines[i].Overlap(lines[j]);
-                    if (overlap) {
-                        //System.Console.WriteLine($"{i},{j} - {lines[i].ID} overlapping {lines[j].ID}");
+                    var overlappingCoordiantes = fabrics[i].OverlappingCoordinates(fabrics[j]);
+                    foreach (var overlappingCoord in overlappingCoordiantes)
+                    {
+                        if (totalOverlappingCoordinates.ContainsKey(overlappingCoord))
+                        {
+                            totalOverlappingCoordinates[overlappingCoord]++;
+                        }
+                        else
+                        {
+                            totalOverlappingCoordinates.Add(overlappingCoord, 1);
+                        }
+                    }
+                    if (overlappingCoordiantes.Count > 0) {
+                        System.Console.WriteLine($"{i},{j} - {fabrics[i].ID} overlapping {fabrics[j].ID}");
                         overlapping++;
                     }
                 }
             }
 
             System.Console.WriteLine(overlapping);
-            
+            System.Console.WriteLine(totalOverlappingCoordinates.Count);
         }
     }
 
@@ -101,14 +102,70 @@ namespace day03
             // x1 <= y2 && y1 <= x2
             var objA = this;
             var objB = input;
-            if (objA.X <= objB.X + objB.W - 1 && objB.X <= objA.X + objA.W - 1)
+            if (objA.X + 1 <= objB.X + 1 + objB.W - 1 && objB.X + 1 <= objA.X + 1 + objA.W - 1)
             {
-                if (objA.Y < objB.Y + objB.H - 1 && objB.Y < objA.Y + objA.H - 1)
+                if (objA.Y + 1 <= objB.Y + 1 + objB.H - 1 && objB.Y + 1 <= objA.Y + 1 + objA.H - 1)
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+        public int OverlappingArea(Fabric input)
+        {   
+            var aX = Enumerable.Range(this.X+1, this.W);
+            var bX = Enumerable.Range(input.X+1, input.W);
+            var aY = Enumerable.Range(this.Y+1, this.H);
+            var bY = Enumerable.Range(input.Y+1, input.H);
+
+            int overlappingX = 0;
+            foreach (var x in aX)
+            {
+                if (bX.Contains(x)) overlappingX++;
+            }
+            int overlappingY = 0;
+            foreach (var y in aY)
+            {
+                if (bY.Contains(y)) overlappingY++;
+            }
+
+            return overlappingX * overlappingY;
+        }
+
+        public List<Coordinate> OverlappingCoordinates(Fabric input)
+        {   
+            var overlappingCoordinates = new List<Coordinate>();
+            var aX = Enumerable.Range(this.X+1, this.W);
+            var bX = Enumerable.Range(input.X+1, input.W);
+            var aY = Enumerable.Range(this.Y+1, this.H);
+            var bY = Enumerable.Range(input.Y+1, input.H);
+
+            foreach (var x in aX)
+            {
+                foreach (var y in aY)
+                {
+                    if (bX.Contains(x) && bY.Contains(y))
+                    {
+                        overlappingCoordinates.Add(new Coordinate{ X = x, Y = y});
+                    }
+                }
+            }
+
+            return overlappingCoordinates;
+        }
+
+
+    }
+
+    public class Coordinate : IEquatable<Coordinate>
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+
+        public bool Equals(Coordinate other)
+        {
+            return other.X == X && other.Y == Y;
         }
     }
 }
