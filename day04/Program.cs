@@ -28,14 +28,18 @@ namespace day04
                     case "Guard":
                         if (guard.ID > 0)
                         {
-                            guard.ActivityList.Add(timestamp, Activity.EndShift);
-                            guards.Add(guard);
+                            //guard.ActivityList.Add(timestamp, Activity.EndShift);
                         }
 
                         var id = int.Parse(activity.Split(' ')[1].Remove(0, 1));
-                        guard = new Guard { ID = id };
-                        guard.ActivityList.Add(timestamp, Activity.BeginShift);
-
+                        guard = guards.FirstOrDefault(g => g.ID == id);
+                        if (guard == null)
+                        {
+                            guard = new Guard { ID = id };
+                            guards.Add(guard);
+                        }
+                        //guard.ActivityList.Add(timestamp, Activity.BeginShift);
+    
                         break;
                     case "falls":
                         guard.ActivityList.Add(timestamp, Activity.FallAsleep);
@@ -46,15 +50,17 @@ namespace day04
                 }
             }
 
+            // All guards loaded
             System.Console.WriteLine(guards.Count);
 
-            // All guards loaded
+            var worstGuard = guards.OrderByDescending(g => g.SleepMinutes).First();
+            System.Console.WriteLine($"{worstGuard.ID}: sleeps during {worstGuard.SleepMinutes} minutes, worst time of the hour is {worstGuard.MostRegularSleepMinute}. Solution {worstGuard.ID*worstGuard.MostRegularSleepMinute}");
 
-            
+            // 94542
         }
     }
 
-    public class Guard
+    public class Guard : IEquatable<Guard>
     {
         public Guard()
         {
@@ -63,6 +69,60 @@ namespace day04
 
         public int ID { get; set; }
         public Dictionary<DateTime, Activity> ActivityList { get; set; }
+
+        public int SleepMinutes
+        {
+            get
+            {
+                DateTime sleep = DateTime.MinValue;
+                int sleepMinutes = 0;
+                foreach (var activity in ActivityList)
+                {
+                    if (activity.Value == Activity.FallAsleep) sleep = activity.Key;
+                    if (activity.Value == Activity.WakeUp)
+                    {
+                        sleepMinutes += (int)activity.Key.Subtract(sleep).TotalMinutes;
+                    }
+                }
+
+                return sleepMinutes;
+            }
+        }
+
+        public int MostRegularSleepMinute
+        {
+            get
+            {
+                DateTime sleep = DateTime.MinValue;
+                Dictionary<int, int> sleepMinutes = new Dictionary<int, int>();
+                foreach (var activity in ActivityList)
+                {
+                    if (activity.Value == Activity.FallAsleep) sleep = activity.Key;
+                    if (activity.Value == Activity.WakeUp)
+                    {
+                        var wakeup = activity.Key;
+                        DateTime currentDateTime = sleep;
+                        while (currentDateTime < wakeup)
+                        {
+                            if (sleepMinutes.ContainsKey(currentDateTime.Minute))
+                            {
+                                sleepMinutes[currentDateTime.Minute]++;
+                            }
+                            else
+                            {
+                                sleepMinutes.Add(currentDateTime.Minute, 1);
+                            }
+                            currentDateTime = currentDateTime.AddMinutes(1);
+                        }
+                    }
+                }
+                return sleepMinutes.OrderByDescending(s => s.Value).First().Key;
+            }
+        }
+        public bool Equals(Guard other)
+        {
+            return this.ID == other.ID;
+        }
     }
 
     public enum Activity
