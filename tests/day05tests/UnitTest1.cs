@@ -13,5 +13,11 @@ namespace day05tests
         {
             Assert.Equal("dabCBAcaDA", polymer.React());
         }
+
+        [Fact]
+        public void Test2()
+        {
+            Assert.Equal("daDA", polymer.ReactWithoutTroubelingType());
+        }
     }
 }
