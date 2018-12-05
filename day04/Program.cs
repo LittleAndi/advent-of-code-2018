@@ -53,10 +53,17 @@ namespace day04
             // All guards loaded
             System.Console.WriteLine(guards.Count);
 
-            var worstGuard = guards.OrderByDescending(g => g.SleepMinutes).First();
-            System.Console.WriteLine($"{worstGuard.ID}: sleeps during {worstGuard.SleepMinutes} minutes, worst time of the hour is {worstGuard.MostRegularSleepMinute}. Solution {worstGuard.ID*worstGuard.MostRegularSleepMinute}");
+            // Part 1
+            var worstGuard1 = guards.OrderByDescending(g => g.SleepMinutes).First();
+            System.Console.WriteLine($"{worstGuard1.ID}: sleeps during {worstGuard1.SleepMinutes} minutes, worst time of the hour is {worstGuard1.MostRegularSleepMinute}. Solution {worstGuard1.ID*worstGuard1.MostRegularSleepMinute}");
 
             // 94542
+
+            // Part 2
+            var worstGuard2 = guards.OrderByDescending(g => g.MostRegularSleepMinuteCount).First();
+            System.Console.WriteLine($"{worstGuard2.ID}: worst time of the hour is {worstGuard2.MostRegularSleepMinute} at {worstGuard2.MostRegularSleepMinuteCount} times. Solution {worstGuard2.ID*worstGuard2.MostRegularSleepMinute}");
+
+            // 50966
         }
     }
 
@@ -119,6 +126,40 @@ namespace day04
                 return sleepMinutes.OrderByDescending(s => s.Value).First().Key;
             }
         }
+
+        public int MostRegularSleepMinuteCount
+        {
+            get
+            {
+                if (ActivityList.Count == 0) return 0;
+
+                DateTime sleep = DateTime.MinValue;
+                Dictionary<int, int> sleepMinutes = new Dictionary<int, int>();
+                foreach (var activity in ActivityList)
+                {
+                    if (activity.Value == Activity.FallAsleep) sleep = activity.Key;
+                    if (activity.Value == Activity.WakeUp)
+                    {
+                        var wakeup = activity.Key;
+                        DateTime currentDateTime = sleep;
+                        while (currentDateTime < wakeup)
+                        {
+                            if (sleepMinutes.ContainsKey(currentDateTime.Minute))
+                            {
+                                sleepMinutes[currentDateTime.Minute]++;
+                            }
+                            else
+                            {
+                                sleepMinutes.Add(currentDateTime.Minute, 1);
+                            }
+                            currentDateTime = currentDateTime.AddMinutes(1);
+                        }
+                    }
+                }
+                return sleepMinutes.OrderByDescending(s => s.Value).First().Value;
+            }
+        }
+
         public bool Equals(Guard other)
         {
             return this.ID == other.ID;
