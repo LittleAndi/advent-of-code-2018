@@ -30,7 +30,6 @@ namespace day07
             lines.AddRange(endSteps);
 
             HashSet<char> stepOrder = new HashSet<char>();
-            char potentialLast = '=';
 
             using (TextWriter tw = new StreamWriter("output.txt"))
             {
@@ -39,23 +38,26 @@ namespace day07
                     var step = currentSteps.First();
                     tw.WriteLine(step);
                     
-                    //lines.Remove(step);
                     stepOrder.Add(step.StepId);
                     stepsDone.AddRange(lines.Where(l => l.StepId.Equals(step.StepId)));
                     lines.RemoveAll(l => l.StepId.Equals(step.StepId));
-                    potentialLast = step.NextId;
 
                     currentSteps.RemoveAll(s => s.StepId.Equals(step.StepId));
 
-                    //currentSteps.AddRange(lines.Where(l => !l.Done && l.StepId.Equals(step.StepId) && !currentSteps.Contains(l)));
                     foreach (var item in stepsDone)
                     {
-                        currentSteps.AddRange(lines.Where(l => !l.Done && l.StepId.Equals(item.NextId) && !currentSteps.Contains(l) && currentSteps.Count(cs => cs.NextId.Equals(l.StepId)) == 0));
+                        currentSteps.AddRange(
+                            lines.Where(
+                                l => l.StepId.Equals(item.NextId) 
+                                && !currentSteps.Contains(l) 
+                                && currentSteps.Count(cs => cs.NextId.Equals(l.StepId)) == 0
+                                && lines.Count(cs => cs.NextId.Equals(l.StepId)) == 0
+                                )
+                            );
                     }
                     currentSteps.Sort();
                 }
             }
-            stepOrder.Add(potentialLast);
 
             foreach (var item in stepOrder)
             {
@@ -75,18 +77,14 @@ namespace day07
             // PGKNOCABFJQMRSTUEIVWDXHYZL (wrong)
             // PGKLNOCABFQRSTJUEIWDXHVYMZ (wrong)
             // OCABFNPGQRSTJUEIVLWDKXHYMZ (wrong)
+            // OCPUEFIXHRGWDZABTQJYMNKVSL (yay!)
         }
     }
 
     public class Step : IComparable, IEquatable<Step>
     {
-        public Step()
-        {
-            Done = false;
-        }
         public char StepId { get; set; }
         public char NextId { get; set; }
-        public bool Done { get; set; }
         public string Name
         {
             get
