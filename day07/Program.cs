@@ -20,6 +20,13 @@ namespace day07
             }
             System.Console.WriteLine();
 
+            //Part1(lines);
+
+            Part2(lines);
+        }
+
+        static void Part1(List<Step> lines)
+        {
             List<Step> stepsDone = new List<Step>();
 
             List<Step> currentSteps = lines.Where(l1 => lines.Count(l2 => l2.NextId == l1.StepId) == 0).ToList();
@@ -37,7 +44,7 @@ namespace day07
                 {
                     var step = currentSteps.First();
                     tw.WriteLine(step);
-                    
+
                     stepOrder.Add(step.StepId);
                     stepsDone.AddRange(lines.Where(l => l.StepId.Equals(step.StepId)));
                     lines.RemoveAll(l => l.StepId.Equals(step.StepId));
@@ -48,8 +55,8 @@ namespace day07
                     {
                         currentSteps.AddRange(
                             lines.Where(
-                                l => l.StepId.Equals(item.NextId) 
-                                && !currentSteps.Contains(l) 
+                                l => l.StepId.Equals(item.NextId)
+                                && !currentSteps.Contains(l)
                                 && currentSteps.Count(cs => cs.NextId.Equals(l.StepId)) == 0
                                 && lines.Count(cs => cs.NextId.Equals(l.StepId)) == 0
                                 )
@@ -79,6 +86,91 @@ namespace day07
             // OCABFNPGQRSTJUEIVLWDKXHYMZ (wrong)
             // OCPUEFIXHRGWDZABTQJYMNKVSL (yay!)
         }
+
+        static void Part2(List<Step> lines)
+        {
+            List<Step> stepsDone = new List<Step>();
+            List<Worker> workers = new List<Worker>();
+
+            List<Step> currentSteps = lines.Where(l1 => lines.Count(l2 => l2.NextId == l1.StepId) == 0).ToList();
+            currentSteps.Sort();
+            List<Step> endSteps = lines.Where(l1 => lines.Count(l2 => l2.StepId == l1.NextId) == 0)
+            .Select(l => new Step() { StepId = l.NextId, NextId = ' ' })
+            .ToList();
+            lines.AddRange(endSteps);
+
+            HashSet<char> stepOrder = new HashSet<char>();
+            int currentSecond = 0;
+
+            while (currentSteps.Count > 0)
+            {
+                while (workers.Count < 5)
+                {
+                    var step = currentSteps.Where(s => workers.Count(w => w.WorkingOn.StepId.Equals(s.StepId)) == 0).FirstOrDefault();
+                    if (step == null) break;
+
+                    workers.Add(new Worker { WorkingOn = step, TimeLeft = step.WorkTime } );
+                }
+
+                Console.Write($"{currentSecond}:\t");
+
+                foreach (var worker in workers)
+                {
+                    Console.Write($"{worker.WorkingOn.StepId}\t");
+
+                    worker.TimeLeft--;
+                    if (worker.TimeLeft == 0) {
+                        stepOrder.Add(worker.WorkingOn.StepId);
+                        stepsDone.AddRange(lines.Where(l => l.StepId.Equals(worker.WorkingOn.StepId)));
+                        lines.RemoveAll(l => l.StepId.Equals(worker.WorkingOn.StepId));
+                        currentSteps.RemoveAll(s => s.StepId.Equals(worker.WorkingOn.StepId));
+
+                    }
+                }
+
+                workers.RemoveAll(w => w.TimeLeft == 0);
+
+                Console.WriteLine();
+
+                foreach (var item in stepsDone)
+                {
+                    currentSteps.AddRange(
+                        lines.Where(
+                            l => l.StepId.Equals(item.NextId)
+                            && !currentSteps.Contains(l)
+                            && currentSteps.Count(cs => cs.NextId.Equals(l.StepId)) == 0
+                            && lines.Count(cs => cs.NextId.Equals(l.StepId)) == 0
+                            )
+                        );
+                }
+
+                
+
+                currentSteps.Sort();
+                currentSecond++;
+            }
+
+            Console.WriteLine(currentSecond);
+
+            foreach (var item in stepOrder)
+            {
+                System.Console.Write(item);
+            }
+            System.Console.WriteLine();
+
+            foreach (var item in stepsDone)
+            {
+                System.Console.WriteLine(item);
+            }
+
+            // OPCUXEHFIRWZGDABTQYJMNKVSL - 991 s
+        }
+    }
+
+    public class Worker
+    {
+        public int TimeLeft { get; set; }
+        public Step WorkingOn { get; set; }
     }
 
     public class Step : IComparable, IEquatable<Step>
@@ -92,6 +184,14 @@ namespace day07
                 return $"{StepId}=>{NextId}";
             }
         }
+        public int WorkTime
+        {
+            get
+            {
+                return 60 + StepId - 64;
+            }
+        }
+
         public override string ToString()
         {
             return Name;
