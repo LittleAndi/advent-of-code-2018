@@ -49,12 +49,11 @@ namespace day03
                         noOverlapping = false;
                     }
                 }
-
                 if (noOverlapping) Console.WriteLine($"{fabrics[i].ID} has no overlap!");
             }
 
             System.Console.WriteLine(overlapping);
-            System.Console.WriteLine("Part 1: {totalOverlappingCoordinates.Count}");
+            System.Console.WriteLine($"Part 1: {totalOverlappingCoordinates.Count}");
             // 110383 (yay!)
         }
     }
