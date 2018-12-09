@@ -31,25 +31,15 @@ namespace day09
                     var pickPos = lastInsertPos;
                     for (int j = 0; j < 7; j++)
                     {
-                        pickPos = pickPos.Previous;
-                        if (pickPos == null) pickPos = marbles.Last;
+                        pickPos = pickPos.Previous ?? marbles.Last;
                     }
-                    //if (pickPos < 0) pickPos += marbles.Count;
                     playerScore[currentPlayer - 1] += pickPos.Value;
                     lastInsertPos = pickPos.Next;
                     marbles.Remove(pickPos);
                 }
                 else
                 {
-                    //var pos1 = (lastInsertPos + 1) % marbles.Count + 1;
-                    if (lastInsertPos.Next == null)
-                    {
-                        lastInsertPos = marbles.First;
-                    }
-                    else
-                    {
-                        lastInsertPos = lastInsertPos.Next;
-                    }
+                    lastInsertPos = lastInsertPos.Next ?? marbles.First;
                     lastInsertPos = marbles.AddAfter(lastInsertPos, i);
                 }
 
@@ -70,7 +60,7 @@ namespace day09
 
                 // Prep for next turn
                 currentPlayer = (++turn % players) + 1;
-                if (turn % 1000 == 0) Console.Write('.');
+                //if (turn % 1000 == 0) Console.Write('.');
             }
             Console.WriteLine();
 
