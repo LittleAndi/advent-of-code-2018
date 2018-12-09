@@ -27,6 +27,8 @@ namespace day03
 
             for (int i = 0; i < fabrics.Length; i++)
             {
+                bool noOverlapping = true;
+
                 for (int j = i+1; j < fabrics.Length; j++)
                 {
                     var overlappingCoordiantes = fabrics[i].OverlappingCoordinates(fabrics[j]);
@@ -42,14 +44,18 @@ namespace day03
                         }
                     }
                     if (overlappingCoordiantes.Count > 0) {
-                        System.Console.WriteLine($"{i},{j} - {fabrics[i].ID} overlapping {fabrics[j].ID}");
+                        //System.Console.WriteLine($"{i},{j} - {fabrics[i].ID} overlapping {fabrics[j].ID}");
                         overlapping++;
+                        noOverlapping = false;
                     }
                 }
+
+                if (noOverlapping) Console.WriteLine($"{fabrics[i].ID} has no overlap!");
             }
 
             System.Console.WriteLine(overlapping);
-            System.Console.WriteLine(totalOverlappingCoordinates.Count);
+            System.Console.WriteLine("Part 1: {totalOverlappingCoordinates.Count}");
+            // 110383 (yay!)
         }
     }
 
@@ -165,7 +171,14 @@ namespace day03
 
         public bool Equals(Coordinate other)
         {
-            return other.X == X && other.Y == Y;
+            if (other is null) return false;
+
+            return other.X == this.X && other.Y == this.Y;
         }
+
+        public override bool Equals(object obj) => Equals(obj as Coordinate);
+        public override int GetHashCode() => (X, Y).GetHashCode();
+        public override string ToString() => $"({X},{Y})";
+
     }
 }
