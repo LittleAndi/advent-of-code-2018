@@ -29,8 +29,10 @@ namespace day03
             {
                 bool noOverlapping = true;
 
-                for (int j = i+1; j < fabrics.Length; j++)
+                for (int j = 0; j < fabrics.Length; j++)
                 {
+                    if (i == j) continue;
+
                     var overlappingCoordiantes = fabrics[i].OverlappingCoordinates(fabrics[j]);
                     foreach (var overlappingCoord in overlappingCoordiantes)
                     {
@@ -49,7 +51,7 @@ namespace day03
                         noOverlapping = false;
                     }
                 }
-                if (noOverlapping) Console.WriteLine($"{fabrics[i].ID} has no overlap!");
+                if (noOverlapping) Console.WriteLine($"Part 2: {fabrics[i].ID} has no overlap!");
             }
 
             System.Console.WriteLine(overlapping);
