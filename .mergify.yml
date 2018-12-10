@@ -1,7 +1,7 @@
 pull_request_rules:
   - name: automatic merge when CI passes
     conditions:
-      - status-success="Advent of Code 2018-ASP.NET Core-CI"
+      - status-success=Advent of Code 2018-ASP.NET Core-CI
       - base=master
     actions:
       merge:
