@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace day01
 {
@@ -9,15 +10,10 @@ namespace day01
     {
         static void Main(string[] args)
         {
-            List<int> numbers = new List<int>();
-            using (TextReader tr = new StreamReader("input.txt"))
-            {
-                string s = "";
-                while ((s = tr.ReadLine()) != null)
-                {
-                    numbers.Add(int.Parse(s, CultureInfo.InvariantCulture));
-                }
-            }
+            var numbers = File.ReadAllLines("input.txt")
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .Select(l => int.Parse(l, CultureInfo.InvariantCulture))
+                .ToList();
 
             int total = 0;
             int currentLoop = 0;
