@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace day14
 {
@@ -7,9 +8,12 @@ namespace day14
     {
         static void Main(string[] args)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             Part1(909441);
-
+            Console.WriteLine(stopwatch.Elapsed);
             Part2("909441");
+            Console.WriteLine(stopwatch.Elapsed);
         }
 
         private static void Part2(string markThis)
