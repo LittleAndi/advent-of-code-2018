@@ -15,7 +15,7 @@ namespace day15
 
         static void Main(string[] args)
         {
-            ReadMap("input_20_18740.txt");
+            ReadMap("input_test_2.txt");
 
             PrintMap();
             PrintPlayers();
@@ -23,6 +23,7 @@ namespace day15
             Console.ReadKey();
 
             bool done = false;
+            bool pause = true;
             int round = 0;
             while (!done)
             {
@@ -42,8 +43,8 @@ namespace day15
                         {
                             foreach (var inRangeSpot in enemy.InRange(map, players))
                             {
-                                //Console.SetCursorPosition(inRangeSpot.X, inRangeSpot.Y);
-                                //Console.Write('?');
+                                Console.SetCursorPosition(inRangeSpot.X, inRangeSpot.Y);
+                                Console.Write('?');
 
                                 var path = BreadthFirstSearch(player.Coordinate, inRangeSpot);
 
@@ -81,7 +82,7 @@ namespace day15
                     }
 
                     // Attack phase
-                    var enemyToAttack = enemies.Where(e => player.IsNearby(e)).OrderBy(e => e.HitPoints).FirstOrDefault();
+                    var enemyToAttack = enemies.Where(e => player.IsNearby(e)).OrderBy(e => e.HitPoints).ThenBy(e => e.Coordinate.Y).ThenBy(e => e.Coordinate.X).FirstOrDefault();
                     if (enemyToAttack != null)
                     {
                         enemyToAttack.TakeHitFrom(player);
@@ -91,14 +92,17 @@ namespace day15
                 }
                 PrintMap();
                 PrintPlayers();
-                PrintStats(round);
-                //Console.ReadKey();
-                round++;
+                PrintStats(++round);
+                if (pause)
+                {
+                    var keyInfo = Console.ReadKey();
+                    if (keyInfo.Key == ConsoleKey.Escape) pause = false;
+                }
             }
 
             var hitpoints = players.Where(p => p.IsAlive).Sum(p => p.HitPoints);
             var result = (round - 1) * hitpoints;
-            PrintMessage($"Result after {round-1} full rounds: {result}");
+            PrintMessage($"Result after {round - 1}*{hitpoints} full rounds: {result}");
             Console.WriteLine();
 
             // 183885 (too high!)
@@ -167,6 +171,7 @@ namespace day15
                     return GetPath(subTreeRoot, meta);
 
                 var children = new List<Coordinate>();
+                // Test directions in this order: up, left, right, down to first find a path in "reading order"
                 if (map[subTreeRoot.X - 1, subTreeRoot.Y].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X - 1 && p.Coordinate.Y == subTreeRoot.Y).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X - 1, Y = subTreeRoot.Y });
                 if (map[subTreeRoot.X + 1, subTreeRoot.Y].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X + 1 && p.Coordinate.Y == subTreeRoot.Y).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X + 1, Y = subTreeRoot.Y });
                 if (map[subTreeRoot.X, subTreeRoot.Y - 1].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X && p.Coordinate.Y == subTreeRoot.Y - 1).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X, Y = subTreeRoot.Y - 1 });
