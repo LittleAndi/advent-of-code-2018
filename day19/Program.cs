@@ -134,6 +134,31 @@ namespace day19
 
     public static class Ops
     {
+        static Dictionary<string, int> opcodes = new Dictionary<string, int>
+        {
+            { "bori",  0 },
+            { "borr",  1 },
+            { "addi",  2 },
+            { "muli",  3 },
+            { "addr",  4 },
+            { "bani",  5 },
+            { "gtri",  6 },
+            { "setr",  7 },
+            { "gtrr",  8 },
+            { "seti",  9 },
+            { "eqir", 10 },
+            { "eqrr", 11 },
+            { "mulr", 12 },
+            { "eqri", 13 },
+            { "gtir", 14 },
+            { "banr", 15 },
+        };
+
+        public static int[] execute(string operation, int[] register, int A, int B, int C)
+        {
+            return execute(opcodes[operation], register, A, B, C);
+        }
+
         public static int[] execute(int operation, int[] register, int A, int B, int C)
         {
             switch (operation)
