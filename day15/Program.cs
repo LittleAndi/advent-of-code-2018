@@ -10,21 +10,50 @@ namespace day15
     class Program
     {
         static char[,] map;
-        static List<Player> players;
         static int currentMessageRow = 0;
 
         static void Main(string[] args)
         {
-            ReadMap("input_test_2.txt");
+            Console.CursorVisible = false;
+
+            List<Player> players = ReadMap("input.txt");
 
             PrintMap();
-            PrintPlayers();
-            PrintStats();
+            PrintPlayers(players);
+            PrintStats(players);
             Console.ReadKey();
+            var result = Fight((List<Player>)players.Clone());
+            Console.WriteLine(result);
 
             bool done = false;
-            bool pause = true;
+            int elfAttackPower = 25; // Start at 25...
+            while (!done)
+            {
+                var boostedResult = Fight((List<Player>)players.Clone(), elfAttackPower: elfAttackPower, allowDeadElves: false, pause: false, pauseEveryPlayer: false);
+
+                if (boostedResult.winner.Equals('E'))
+                {
+                    done = true;
+                }
+                elfAttackPower++;
+            }
+
+            // 183885 (too high!)
+            // 184470 (too high!)
+            // 183300
+        }
+
+        private static (char winner, int result) Fight(List<Player> players, int elfAttackPower = 3, bool allowDeadElves = true, bool pause = true, bool pauseEveryPlayer = true)
+        {
+            bool done = false;
             int round = 0;
+
+            // Adjust Elf attack power
+            players.ForEach((player) =>
+            {
+                if (player.Type.Equals('E')) player.AttackPower = elfAttackPower;
+            });
+
             while (!done)
             {
                 foreach (var player in players.Where(p => p.IsAlive).OrderBy(p => p.Coordinate.Y).ThenBy(p => p.Coordinate.X))
@@ -46,11 +75,10 @@ namespace day15
                                 Console.SetCursorPosition(inRangeSpot.X, inRangeSpot.Y);
                                 Console.Write('?');
 
-                                var path = BreadthFirstSearch(player.Coordinate, inRangeSpot);
+                                var path = BreadthFirstSearch(players, player.Coordinate, inRangeSpot);
 
                                 if (path != null)
                                 {
-                                    path.Reverse();
                                     path.Add(inRangeSpot);
                                     if (!inRangeSpots.ContainsKey(inRangeSpot))
                                     {
@@ -78,7 +106,7 @@ namespace day15
                             player.MoveTo(chosenSpot.Value.First());
                         }
                         PrintMap();
-                        PrintPlayers();
+                        PrintPlayers(players);
                     }
 
                     // Attack phase
@@ -86,13 +114,24 @@ namespace day15
                     if (enemyToAttack != null)
                     {
                         enemyToAttack.TakeHitFrom(player);
+                        if (!allowDeadElves && enemyToAttack.Type.Equals('E') && enemyToAttack.IsDead)
+                        {
+                            return ('X', 0);
+                        }
+                    }
+
+                    if (pauseEveryPlayer)
+                    {
+                        PrintStats(players, round);
+                        var keyInfo = Console.ReadKey();
+                        if (keyInfo.Key == ConsoleKey.Escape) pauseEveryPlayer = false;
                     }
 
                     //PrintMessage($"Player {player.Type} - enemies: {enemies.Count()}");
                 }
                 PrintMap();
-                PrintPlayers();
-                PrintStats(++round);
+                PrintPlayers(players);
+                PrintStats(players, ++round, elfAttackPower);
                 if (pause)
                 {
                     var keyInfo = Console.ReadKey();
@@ -100,13 +139,13 @@ namespace day15
                 }
             }
 
+            var winningType = players.Where(p => p.IsAlive).First().Type;
             var hitpoints = players.Where(p => p.IsAlive).Sum(p => p.HitPoints);
             var result = (round - 1) * hitpoints;
             PrintMessage($"Result after {round - 1}*{hitpoints} full rounds: {result}");
             Console.WriteLine();
 
-            // 183885 (too high!)
-            // 184470 (too high!)
+            return (winningType, result);
         }
 
         private static void PrintMessage(string message)
@@ -116,9 +155,9 @@ namespace day15
             Console.Write(message);
         }
 
-        private static void ReadMap(string file)
+        private static List<Player> ReadMap(string file)
         {
-            players = new List<Player>();
+            List<Player> players = new List<Player>();
 
             var lines = File.ReadAllLines(file)
                 .Where(l => !string.IsNullOrWhiteSpace(l))
@@ -148,15 +187,18 @@ namespace day15
                 }
                 y++;
             }
+
+            return players;
         }
 
-        private static List<Coordinate> BreadthFirstSearch(Coordinate start, Coordinate end)
+        private static List<Coordinate> BreadthFirstSearch(List<Player> players, Coordinate start, Coordinate end)
         {
             // https://en.wikipedia.org/wiki/Breadth-first_search
 
             Queue<Coordinate> openSet = new Queue<Coordinate>();
             HashSet<Coordinate> closedSet = new HashSet<Coordinate>();
             Dictionary<Coordinate, Coordinate> meta = new Dictionary<Coordinate, Coordinate>();
+            List<List<Coordinate>> allPaths = new List<List<Coordinate>>();
 
             var root = start;
             meta.Add(root, null);
@@ -168,13 +210,17 @@ namespace day15
                 //Console.SetCursorPosition(subTreeRoot.X, subTreeRoot.Y);
 
                 if (subTreeRoot.Equals(end))
-                    return GetPath(subTreeRoot, meta);
+                {
+                    var p = GetPath(subTreeRoot, meta);
+                    if (p != null) allPaths.Add(p);
+                    break;
+                }
 
                 var children = new List<Coordinate>();
                 // Test directions in this order: up, left, right, down to first find a path in "reading order"
+                if (map[subTreeRoot.X, subTreeRoot.Y - 1].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X && p.Coordinate.Y == subTreeRoot.Y - 1).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X, Y = subTreeRoot.Y - 1 });
                 if (map[subTreeRoot.X - 1, subTreeRoot.Y].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X - 1 && p.Coordinate.Y == subTreeRoot.Y).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X - 1, Y = subTreeRoot.Y });
                 if (map[subTreeRoot.X + 1, subTreeRoot.Y].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X + 1 && p.Coordinate.Y == subTreeRoot.Y).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X + 1, Y = subTreeRoot.Y });
-                if (map[subTreeRoot.X, subTreeRoot.Y - 1].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X && p.Coordinate.Y == subTreeRoot.Y - 1).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X, Y = subTreeRoot.Y - 1 });
                 if (map[subTreeRoot.X, subTreeRoot.Y + 1].Equals('.') && !(players.Where(p => p.IsAlive && p.Coordinate.X == subTreeRoot.X && p.Coordinate.Y == subTreeRoot.Y + 1).Count() > 0)) children.Add(new Coordinate { X = subTreeRoot.X, Y = subTreeRoot.Y + 1 });
 
                 foreach (var child in children)
@@ -195,7 +241,20 @@ namespace day15
                 closedSet.Add(subTreeRoot);
             }
 
-            return null;
+            var chosenPath = new List<Coordinate>();
+
+            if (allPaths.Count == 0) return null;
+            if (allPaths.Count == 1)
+            {
+                chosenPath = allPaths.First();
+            }
+            else
+            {
+                Console.WriteLine("FOUND MULTIPLE PATHS!");
+                Console.ReadKey();
+            }
+
+            return chosenPath;
         }
 
         private static List<Coordinate> GetPath(Coordinate coordinate, Dictionary<Coordinate, Coordinate> meta)
@@ -207,7 +266,7 @@ namespace day15
                 path.Add(meta[coordinate]);
                 coordinate = meta[coordinate];
             }
-
+            path.Reverse();
             return path;
         }
 
@@ -227,7 +286,7 @@ namespace day15
             Console.SetCursorPosition(0, map.GetLength(1) + 1);
         }
 
-        private static void PrintPlayers()
+        private static void PrintPlayers(List<Player> players)
         {
             foreach (var player in players.Where(p => p.IsAlive))
             {
@@ -251,7 +310,7 @@ namespace day15
             Console.SetCursorPosition(curX, curY);
         }
 
-        private static void PrintStats(int round = 0)
+        private static void PrintStats(List<Player> players, int round = 0, int elfAttackPower = 3)
         {
             var curX = Console.CursorLeft;
             var curY = Console.CursorTop;
@@ -261,6 +320,7 @@ namespace day15
             var statTop = 0;
             Console.SetCursorPosition(statLeft, statTop++);
             Console.Write($"Players:\t{players.Count.ToString().Pastel(System.Drawing.Color.Red)}");
+            Console.Write($"\tElf Attack Power:\t{elfAttackPower}");
             Console.SetCursorPosition(statLeft, statTop++);
             Console.Write($"Round:\t{round.ToString().Pastel(System.Drawing.Color.Red)}");
             statTop++;
@@ -270,7 +330,8 @@ namespace day15
                 Console.SetCursorPosition(statLeft, statTop++);
                 if (player.IsAlive)
                 {
-                    Console.Write($"Player {player.Type} {player.ToString()}: {player.HitPoints,3} HP  ");
+                    var color = player.Type.Equals('E') ? System.Drawing.Color.Green : System.Drawing.Color.Red;
+                    Console.Write($"Player {player.Type.ToString().Pastel(color)} {player.ToString()}: {player.HitPoints,3} HP  ");
                 }
                 else
                 {
@@ -282,7 +343,7 @@ namespace day15
         }
     }
 
-    public class Player
+    public class Player : ICloneable
     {
         public char Type { get; set; }
         public Coordinate Coordinate { get; set; }
@@ -333,6 +394,16 @@ namespace day15
             Coordinate = coordinate;
         }
 
+        public object Clone()
+        {
+            var p = new Player();
+            p.Type = Type;
+            p.Coordinate.X = Coordinate.X;
+            p.Coordinate.Y = Coordinate.Y;
+
+            return p;
+        }
+
         internal bool IsDead => HitPoints <= 0;
         internal bool IsAlive => HitPoints > 0;
     }
@@ -352,6 +423,14 @@ namespace day15
         public override int GetHashCode() => (X, Y).GetHashCode();
         public override string ToString() => $"({X},{Y})";
 
+    }
+
+    static class Extensions
+    {
+        public static IList<T> Clone<T>(this IList<T> listToClone) where T : ICloneable
+        {
+            return listToClone.Select(item => (T)item.Clone()).ToList();
+        }
     }
 }
 
