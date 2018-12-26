@@ -42,7 +42,7 @@ namespace day18tests
         [Fact]
         public void Test1()
         {
-            map.CountLumberyards();
+            //map.CountLumberyards();
         }
     }
 }
