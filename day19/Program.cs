@@ -15,11 +15,13 @@ namespace day19
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .ToList();
 
+            TextWriter tw = new StreamWriter("output.txt");
+
             var program = ParseInput(lines);
 
             Console.WriteLine(program);
 
-            var register = new long[6] { 0, 0, 0, 0, 0, 0 };
+            var register = new long[6] { 1, 0, 0, 0, 0, 0 };
             bool running = true;
             int ip = 0;
             List<int> ipList = new List<int>();
@@ -30,24 +32,31 @@ namespace day19
 
 
                 ipList.Add(ip);
+                StringBuilder sb = new StringBuilder();
+                sb.Append($"ip={ip,2} ");
+                sb.Append($"[{string.Join(", ", register)}]\t");
+                sb.Append($"{pgmLine.Operation} {pgmLine.A} {pgmLine.B} {pgmLine.C}\t");
+
+                register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
+
+                sb.Append($"[{string.Join(", ", register)}]");
+
                 if (ip == 7)
                 {
                     Console.SetCursorPosition(0, ip);
-                    Console.Write($"ip={ip} ");
-                    Console.Write($"[{string.Join(", ", register)}] ");
-                    Console.Write($"{pgmLine.Operation} {pgmLine.A} {pgmLine.B} {pgmLine.C} ");
-                }
-                register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
-                if (ip == 7)
-                {
-                    Console.Write($"[{string.Join(", ", register)}]");
-                    Console.WriteLine();
+                    Console.Write(sb.ToString());
+                    tw.Flush();
                     Console.ReadKey();
                 }
+
+                tw.WriteLine(sb.ToString());
+
                 ip = (int)register[program.ip] + 1;
 
                 if (ip >= program.pgmLines.Count) running = false;
             }
+
+            tw.Close();
 
             Console.WriteLine($"Register 0 contains {register[0]}");
             Console.WriteLine($"Last instruction {ipList.Last()}, total instructions run {ipList.Count}");
@@ -369,7 +378,7 @@ namespace day19
         }
 
         /// <summary>
-        /// eqri (equal register/immediate) sets register C to 1 if register A is equal to value B.Otherwise, register C is set to 0.
+        /// eqri (equal register/immediate) sets register C to 1 if register A is equal to value B. Otherwise, register C is set to 0.
         /// </summary>
         /// <param name="register"></param>
         /// <param name="A"></param>
@@ -384,7 +393,7 @@ namespace day19
         }
 
         /// <summary>
-        /// eqrr (equal register/register) sets register C to 1 if register A is equal to register B.Otherwise, register C is set to 0.
+        /// eqrr (equal register/register) sets register C to 1 if register A is equal to register B. Otherwise, register C is set to 0.
         /// </summary>
         /// <param name="register"></param>
         /// <param name="A"></param>
