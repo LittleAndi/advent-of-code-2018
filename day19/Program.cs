@@ -10,68 +10,62 @@ namespace day19
     {
         private static void Main(string[] args)
         {
+            Console.CursorVisible = false;
             var lines = File.ReadAllLines("input.txt")
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .ToList();
 
-            LinkedList<string> testInputs = new LinkedList<string>(lines);
+            var program = ParseInput(lines);
 
-            List<Test> pgm = new List<Test>();
-            List<Test> tests = ParseInput(testInputs, out pgm);
-            Dictionary<string, int[]> mapOps = new Dictionary<string, int[]>();
+            Console.WriteLine(program);
 
-            int moreThanOrEqualToThree = 0;
-            Dictionary<int, string> opCodes = new Dictionary<int, string>();
-            foreach (var test in tests)
+            var register = new long[6] { 0, 0, 0, 0, 0, 0 };
+            bool running = true;
+            int ip = 0;
+            List<int> ipList = new List<int>();
+            while (running)
             {
-                var result = Ops.testsample(test.Before, test.A, test.B, test.C, test.After);
-                if (result.Count >= 3) moreThanOrEqualToThree++;
-                if (result.Count == 1)
+                var pgmLine = program.pgmLines[ip];
+                register[program.ip] = ip;
+
+
+                ipList.Add(ip);
+                if (ip == 7)
                 {
-                    if (!opCodes.ContainsKey(test.Operation))
-                    {
-                        opCodes.Add(test.Operation, result.Keys.First());
-                        Console.WriteLine($"Opcode {test.Operation} is {result.Keys.First()}");
-                    }
+                    Console.SetCursorPosition(0, ip);
+                    Console.Write($"ip={ip} ");
+                    Console.Write($"[{string.Join(", ", register)}] ");
+                    Console.Write($"{pgmLine.Operation} {pgmLine.A} {pgmLine.B} {pgmLine.C} ");
                 }
-                foreach (var item in result)
+                register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
+                if (ip == 7)
                 {
-                    if (!mapOps.ContainsKey(item.Key))
-                    {
-                        mapOps.Add(item.Key, new int[16]);
-                    }
-                    mapOps[item.Key][test.Operation] = 1;
+                    Console.Write($"[{string.Join(", ", register)}]");
+                    Console.WriteLine();
+                    Console.ReadKey();
                 }
+                ip = (int)register[program.ip] + 1;
+
+                if (ip >= program.pgmLines.Count) running = false;
             }
 
-            Console.WriteLine(moreThanOrEqualToThree);
+            Console.WriteLine($"Register 0 contains {register[0]}");
+            Console.WriteLine($"Last instruction {ipList.Last()}, total instructions run {ipList.Count}");
+        }
 
-            PrintOps(mapOps);
+        private static (int ip, List<PgmLine> pgmLines) ParseInput(List<string> lines)
+        {
+            var pgmLines = new List<PgmLine>();
 
-            while (mapOps.Count > 0)
+            var ip = int.Parse(lines[0].Replace("#ip ", ""));
+            foreach (var line in lines.Skip(1))
             {
-                for (int i = 0; i < 16; i++)
-                {
-                    var s = mapOps.Sum(m => m.Value[i]);
-                    if (s == 1)
-                    {
-                        var o = mapOps.Where(m => m.Value[i] == 1).First();
-                        Console.WriteLine($"{o.Key}, {i}");
-                        mapOps.Remove(o.Key);
-                    }
-                }
+                var s = line.Split(' ');
+                var pgmLine = new PgmLine { Operation = s[0], A = int.Parse(s[1]), B = int.Parse(s[2]), C = int.Parse(s[3]) };
+                pgmLines.Add(pgmLine);
             }
 
-            int[] register = new int[] { 0, 0, 0, 0 };
-            foreach (var item in pgm)
-            {
-                register = Ops.execute(item.Operation, register, item.A, item.B, item.C);
-                Console.WriteLine($"{item.Operation,2} {item.A} {item.B} {item.C} => {register[0],4}{register[1],4}{register[2],4}{register[3],4}");
-            }
-
-            Console.WriteLine(register[0]);
-
-            //Ops.testsample(new int[] { 3, 2, 1, 1 }, 2, 1, 2, new int[] { 3, 2, 2, 1 });
+            return (ip, pgmLines);
         }
 
         private static void PrintOps(Dictionary<string, int[]> mapOps)
@@ -87,49 +81,14 @@ namespace day19
             }
         }
 
-        private static List<Test> ParseInput(LinkedList<string> testInputs, out List<Test> pgm)
-        {
-            pgm = new List<Test>();
-            List<Test> tests = new List<Test>();
-            var testInput = testInputs.First;
+    }
 
-            Test test;
-            while (testInput != null)
-            {
-                if (testInput.Value.StartsWith("Before: "))
-                {
-                    test = new Test();
-                    test.Before = new int[] { int.Parse(testInput.Value.Substring(9, 1)), int.Parse(testInput.Value.Substring(12, 1)), int.Parse(testInput.Value.Substring(15, 1)), int.Parse(testInput.Value.Substring(18, 1)) };
-
-                    testInput = testInput.Next;
-                    var command = testInput.Value.Split(' ');
-                    test.Operation = int.Parse(command[0]);
-                    test.A = int.Parse(command[1]);
-                    test.B = int.Parse(command[2]);
-                    test.C = int.Parse(command[3]);
-
-                    testInput = testInput.Next;
-                    test.After = new int[] { int.Parse(testInput.Value.Substring(9, 1)), int.Parse(testInput.Value.Substring(12, 1)), int.Parse(testInput.Value.Substring(15, 1)), int.Parse(testInput.Value.Substring(18, 1)) };
-                    tests.Add(test);
-
-                    testInput = testInput.Next;
-                }
-                else
-                {
-                    var command = testInput.Value.Split(' ');
-                    var pgmOp = new Test();
-                    pgmOp.Operation = int.Parse(command[0]);
-                    pgmOp.A = int.Parse(command[1]);
-                    pgmOp.B = int.Parse(command[2]);
-                    pgmOp.C = int.Parse(command[3]);
-                    pgm.Add(pgmOp);
-                    testInput = testInput.Next;
-                }
-            }
-
-            //Console.WriteLine(tests.Count);
-            return tests;
-        }
+    public class PgmLine
+    {
+        public string Operation { get; set; }
+        public int A { get; set; }
+        public int B { get; set; }
+        public int C { get; set; }
     }
 
     public static class Ops
@@ -154,12 +113,12 @@ namespace day19
             { "banr", 15 },
         };
 
-        public static int[] execute(string operation, int[] register, int A, int B, int C)
+        public static long[] execute(string operation, long[] register, int A, int B, int C)
         {
             return execute(opcodes[operation], register, A, B, C);
         }
 
-        public static int[] execute(int operation, int[] register, int A, int B, int C)
+        public static long[] execute(int operation, long[] register, int A, int B, int C)
         {
             switch (operation)
             {
@@ -207,7 +166,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] addr(int[] register, int A, int B, int C)
+        public static long[] addr(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] + register[B];
@@ -222,7 +181,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] addi(int[] register, int A, int B, int C)
+        public static long[] addi(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] + B;
@@ -237,7 +196,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] mulr(int[] register, int A, int B, int C)
+        public static long[] mulr(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] * register[B];
@@ -252,7 +211,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] muli(int[] register, int A, int B, int C)
+        public static long[] muli(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] * B;
@@ -267,7 +226,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] banr(int[] register, int A, int B, int C)
+        public static long[] banr(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] & register[B];
@@ -282,7 +241,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] bani(int[] register, int A, int B, int C)
+        public static long[] bani(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] & B;
@@ -297,7 +256,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] borr(int[] register, int A, int B, int C)
+        public static long[] borr(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] | register[B];
@@ -312,7 +271,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] bori(int[] register, int A, int B, int C)
+        public static long[] bori(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A] | B;
@@ -327,7 +286,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] setr(int[] register, int A, int B, int C)
+        public static long[] setr(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = register[A];
@@ -342,7 +301,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] seti(int[] register, int A, int B, int C)
+        public static long[] seti(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = A;
@@ -357,7 +316,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] gtir(int[] register, int A, int B, int C)
+        public static long[] gtir(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = (A > register[B] ? 1 : 0);
@@ -372,7 +331,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] gtri(int[] register, int A, int B, int C)
+        public static long[] gtri(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = (register[A] > B ? 1 : 0);
@@ -387,7 +346,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] gtrr(int[] register, int A, int B, int C)
+        public static long[] gtrr(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = (register[A] > register[B] ? 1 : 0);
@@ -402,7 +361,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] eqir(int[] register, int A, int B, int C)
+        public static long[] eqir(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = (A == register[B] ? 1 : 0);
@@ -417,7 +376,7 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] eqri(int[] register, int A, int B, int C)
+        public static long[] eqri(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = (register[A] == B ? 1 : 0);
@@ -432,16 +391,16 @@ namespace day19
         /// <param name="B"></param>
         /// <param name="C"></param>
         /// <returns></returns>
-        public static int[] eqrr(int[] register, int A, int B, int C)
+        public static long[] eqrr(long[] register, int A, int B, int C)
         {
             var reg = register.ToArray();
             reg[C] = (register[A] == register[B] ? 1 : 0);
             return reg;
         }
 
-        public static Dictionary<string, int> testsample(int[] register, int A, int B, int C, int[] compare)
+        public static Dictionary<string, int> testsample(long[] register, int A, int B, int C, long[] compare)
         {
-            Dictionary<string, int[]> results = new Dictionary<string, int[]>();
+            Dictionary<string, long[]> results = new Dictionary<string, long[]>();
             results.Add("addr", addr(register, A, B, C));
             results.Add("addi", addi(register, A, B, C));
             results.Add("mulr", mulr(register, A, B, C));
@@ -469,13 +428,4 @@ namespace day19
         }
     }
 
-    public class Test
-    {
-        public int[] Before { get; set; }
-        public int[] After { get; set; }
-        public int Operation { get; set; }
-        public int A { get; set; }
-        public int B { get; set; }
-        public int C { get; set; }
-    }
 }
