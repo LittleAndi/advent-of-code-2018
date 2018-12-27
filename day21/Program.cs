@@ -20,47 +20,56 @@ namespace day21
             var program = ParseInput(lines);
 
             // Part 1 = 8797248
-            var result = TestRun(program, 2105975, false);
+            // Part 2 = 3007673 (after somewhere between 3800000000-3900000000 instructions
+            var result = TestRun(program, 0, false);
 
 
             Console.SetCursorPosition(0, 32);
             Console.WriteLine(result.runs);
         }
 
-        private static (long[] register, int runs) TestRun((int ip, List<PgmLine> pgmLines) program, long reg0, bool print = false)
+        private static (long[] register, long runs) TestRun((int ip, List<PgmLine> pgmLines) program, long reg0, bool print = false)
         {
             var register = new long[6] { reg0, 0, 0, 0, 0, 0 };
             bool running = true;
-            List<int> ipList = new List<int>();
+            //List<int> ipList = new List<int>();
+            long instructionCounter = 0;
             List<long> regHistory = new List<long>();
             int ip = 0;
             while (running)
             {
+                instructionCounter++;
                 var pgmLine = program.pgmLines[ip];
                 register[program.ip] = ip;
 
-                ipList.Add(ip);
+                //ipList.Add(ip);
+
+                if (instructionCounter % 100000000 == 0)
+                {
+                    Console.WriteLine($"Runs {instructionCounter}, last history input {regHistory.Last()}");
+                }
 
                 if (ip == 28 && !regHistory.Contains(register[2]))
                 {
                     //Console.WriteLine($"{Convert.ToString(register[2],2).PadLeft(26, '0')}");
+                    //Console.WriteLine(register[2]);
                     regHistory.Add(register[2]);
                 }
-                if (print)
-                {
-                    StringBuilder sb = new StringBuilder();
-                    sb.Append($"ip={ip,2} ");
-                    sb.Append($"[{string.Join(", ", register)}]\t");
-                    sb.Append($"{pgmLine.Operation} {pgmLine.A} {pgmLine.B} {pgmLine.C}\t");
+                //if (print)
+                //{
+                //    StringBuilder sb = new StringBuilder();
+                //    sb.Append($"ip={ip,2} ");
+                //    sb.Append($"[{string.Join(", ", register)}]\t");
+                //    sb.Append($"{pgmLine.Operation} {pgmLine.A} {pgmLine.B} {pgmLine.C}\t");
+                //    register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
+                //    sb.Append($"[{string.Join(", ", register)}]");
+                //    Console.SetCursorPosition(0, ip);
+                //    Console.Write(sb.ToString());
+                //}
+                //else
+                //{
                     register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
-                    sb.Append($"[{string.Join(", ", register)}]");
-                    Console.SetCursorPosition(0, ip);
-                    Console.Write(sb.ToString());
-                }
-                else
-                {
-                    register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
-                }
+                //}
 
                 ip = (int)register[program.ip] + 1;
 
@@ -68,7 +77,7 @@ namespace day21
 
             }
 
-            return (register, ipList.Count);
+            return (register, instructionCounter);
         }
 
         private static (int ip, List<PgmLine> pgmLines) ParseInput(List<string> lines)
