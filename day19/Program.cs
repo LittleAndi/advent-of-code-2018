@@ -10,7 +10,7 @@ namespace day19
     {
         private static void Main(string[] args)
         {
-            Console.CursorVisible = false;
+            //Console.CursorVisible = false;
             var lines = File.ReadAllLines("input.txt")
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .ToList();
@@ -19,54 +19,99 @@ namespace day19
 
             var program = ParseInput(lines);
 
-            Console.WriteLine(program);
+            //Console.Clear();
+            Console.WriteLine(program.pgmLines.Count());
 
-            var register = new long[6] { 1, 0, 0, 0, 0, 0 };
+            var register = new long[6] { 0, 0, 0, 0, 0, 0 };
             bool running = true;
             int ip = 0;
             List<int> ipList = new List<int>();
             while (running)
             {
                 var pgmLine = program.pgmLines[ip];
-                register[program.ip] = ip;
+                register[program.ipRegister] = ip;
 
+                // if (register[program.ipRegister] == 3)
+                // {
+                //     // mulr 5 2 1
+                //     register[1] = register[5] * register[2];
 
-                ipList.Add(ip);
-                StringBuilder sb = new StringBuilder();
-                sb.Append($"ip={ip,2} ");
-                sb.Append($"[{string.Join(", ", register)}]\t");
-                sb.Append($"{pgmLine.Operation} {pgmLine.A} {pgmLine.B} {pgmLine.C}\t");
+                //     // eqrr 1 3 1
+                //     if (register[1] == register[3])
+                //     {
+                //         register[1] = 1;
+                //     }
+                //     else
+                //     {
+                //         register[1] = 0;
+                //     }
 
-                register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
+                //     // addr 1 4 4
+                //     register[4] = register[1] + register[4];
 
-                sb.Append($"[{string.Join(", ", register)}]");
+                //     // addi 4 1 4
+                //     register[4] = register[4] + 1;
 
-                if (ip == 7)
+                //     // addi 2 1 2
+                //     register[2] = register[1] + 1;
+
+                //     // gtrr 2 3 1
+                //     if (register[2] > register[3])
+                //     {
+                //         register[1] = 1;
+                //     }
+                //     else
+                //     {
+                //         register[1] = 0;
+                //     }
+
+                //     // addr 4 1 4
+                //     register[4] = register[4] + register[1];
+
+                //     // seti 2 6 4
+                //     register[4] = 2;
+                // }
+                // else
                 {
-                    Console.SetCursorPosition(0, ip);
-                    Console.Write(sb.ToString());
-                    tw.Flush();
-                    Console.ReadKey();
+                    register = Ops.execute(pgmLine.Operation, register, pgmLine.A, pgmLine.B, pgmLine.C);
                 }
 
-                tw.WriteLine(sb.ToString());
+                // ipList.Add(ip);
+                // StringBuilder sb = new StringBuilder();
+                // sb.Append($"ip={ip,2} ");
+                // sb.Append($"[{string.Join(", ", register)}]\t");
+                // sb.Append($"{pgmLine.Operation} {pgmLine.A} {pgmLine.B} {pgmLine.C}\t");
 
-                ip = (int)register[program.ip] + 1;
+
+                // sb.Append($"[{string.Join(", ", register)}]");
+
+                // if (register[0] > 0)
+                // {
+                //     Console.SetCursorPosition(0, ip);
+                //     Console.Write(sb.ToString());
+                //     tw.Flush();
+                //     Console.ReadKey();
+                // }
+
+                // tw.WriteLine(sb.ToString());
+
+                ip = (int)register[program.ipRegister] + 1;
 
                 if (ip >= program.pgmLines.Count) running = false;
             }
 
             tw.Close();
 
+            Console.WriteLine();
             Console.WriteLine($"Register 0 contains {register[0]}");
-            Console.WriteLine($"Last instruction {ipList.Last()}, total instructions run {ipList.Count}");
+            //Console.WriteLine($"Last instruction {ipList.Last()}, total instructions run {ipList.Count}");
         }
 
-        private static (int ip, List<PgmLine> pgmLines) ParseInput(List<string> lines)
+        private static (int ipRegister, List<PgmLine> pgmLines) ParseInput(List<string> lines)
         {
             var pgmLines = new List<PgmLine>();
 
-            var ip = int.Parse(lines[0].Replace("#ip ", ""));
+            var ipRegister = int.Parse(lines[0].Replace("#ip ", ""));
             foreach (var line in lines.Skip(1))
             {
                 var s = line.Split(' ');
@@ -74,7 +119,7 @@ namespace day19
                 pgmLines.Add(pgmLine);
             }
 
-            return (ip, pgmLines);
+            return (ipRegister, pgmLines);
         }
 
         private static void PrintOps(Dictionary<string, int[]> mapOps)
